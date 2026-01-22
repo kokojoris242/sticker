@@ -15,25 +15,16 @@
 
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: transparent;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            overflow: hidden;
         }
 
         .app-container {
-            width: 100%;
-            max-width: 800px;
-            height: 600px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 20px;
+            width: 100vw;
+            height: 100vh;
             position: relative;
             overflow: hidden;
-            backdrop-filter: blur(10px);
         }
 
         .draggable {
@@ -48,259 +39,206 @@
             cursor: grabbing;
         }
 
+        .sticker-wrapper {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            transform-style: preserve-3d;
+            perspective: 1200px;
+        }
+
         .sticker-container {
             position: relative;
-            width: var(--sticker-width, 200px);
-            height: var(--sticker-width, 200px);
+            width: 100%;
+            height: 100%;
             transform-style: preserve-3d;
-            perspective: 1000px;
+            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
         .sticker-main {
             position: absolute;
             width: 100%;
             height: 100%;
-            transform-origin: center;
-            transform: rotate(var(--sticker-rotate, 30deg));
-            transition: transform 0.3s var(--sticker-peel-hover-easing, ease-out);
-            filter: url(#dropShadow);
-        }
-
-        .sticker-container:hover .sticker-main,
-        .touch-active .sticker-main {
-            transform: rotate(var(--sticker-rotate, 30deg)) 
-                       rotateX(calc(var(--sticker-peelback-hover, 30%) * 0.9deg));
-        }
-
-        .sticker-container:active .sticker-main,
-        .touch-active:active .sticker-main {
-            transform: rotate(var(--sticker-rotate, 30deg)) 
-                       rotateX(calc(var(--sticker-peelback-active, 40%) * 0.9deg));
-        }
-
-        .sticker-lighting {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            border-radius: 15%;
-            overflow: hidden;
+            transform-origin: top right;
+            backface-visibility: hidden;
+            filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.3));
         }
 
         .sticker-image {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             display: block;
-            filter: url(#pointLight);
             pointer-events: none;
+            user-select: none;
+            -webkit-user-drag: none;
         }
 
-        .flap {
+        .sticker-peel {
             position: absolute;
+            top: 0;
+            right: 0;
+            width: 0%;
+            height: 0%;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.95) 0%, 
+                rgba(230, 230, 230, 0.9) 50%, 
+                rgba(200, 200, 200, 0.85) 100%);
+            transform-origin: top right;
+            transform: rotateZ(0deg);
+            opacity: 0;
+            pointer-events: none;
+            clip-path: polygon(100% 0, 100% 0, 100% 100%);
+            filter: drop-shadow(-5px 5px 15px rgba(0, 0, 0, 0.4));
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            border-top-right-radius: 20px;
+        }
+
+        .sticker-peel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
             width: 100%;
             height: 100%;
-            top: 0;
-            left: 0;
-            transform-origin: bottom center;
-            transform: rotate(var(--sticker-rotate, 30deg)) 
-                       rotateX(180deg) 
-                       translateZ(-2px);
-            opacity: 0;
-            transition: opacity 0.2s ease-out;
+            background: linear-gradient(225deg, 
+                rgba(255, 255, 255, 0.5) 0%, 
+                transparent 50%);
             pointer-events: none;
         }
 
-        .sticker-container:hover .flap,
-        .touch-active .flap {
+        .sticker-peel::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle at top right, 
+                rgba(0, 0, 0, 0.1) 0%, 
+                transparent 70%);
+            border-top-right-radius: 20px;
+        }
+
+        .draggable:hover .sticker-peel {
+            width: 45%;
+            height: 45%;
+            opacity: 1;
+            clip-path: polygon(100% 0, 40% 0, 100% 60%);
+        }
+
+        .draggable:active .sticker-peel {
+            width: 60%;
+            height: 60%;
+            opacity: 1;
+            clip-path: polygon(100% 0, 20% 0, 100% 80%);
+            transform: rotateZ(-5deg);
+        }
+
+        .draggable:hover .sticker-main {
+            filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.4));
+        }
+
+        .sticker-curl-shadow {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0%;
+            height: 0%;
+            background: radial-gradient(ellipse at top right, 
+                rgba(0, 0, 0, 0.3) 0%, 
+                transparent 70%);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            mix-blend-mode: multiply;
+        }
+
+        .draggable:hover .sticker-curl-shadow {
+            width: 50%;
+            height: 50%;
             opacity: 1;
         }
 
-        .flap-lighting {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            border-radius: 15%;
-            overflow: hidden;
-            filter: brightness(0.7) url(#pointLightFlipped);
-        }
-
-        .flap-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            pointer-events: none;
-        }
-
-        .instructions {
-            text-align: center;
-            color: white;
-            margin-bottom: 20px;
-            font-size: 18px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .upload-section {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .upload-btn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s;
-        }
-
-        .upload-btn:hover {
-            background: #5568d3;
-        }
-
-        #imageUpload {
-            display: none;
+        .draggable:active .sticker-curl-shadow {
+            width: 65%;
+            height: 65%;
+            opacity: 1;
         }
     </style>
 </head>
 <body>
-    <div class="upload-section">
-        <label for="imageUpload" class="upload-btn">📷 Eigenen Sticker hochladen</label>
-        <input type="file" id="imageUpload" accept="image/*">
-    </div>
-
-    <div class="instructions">
-        <p>Ziehe den Sticker mit der Maus oder deinem Finger!</p>
-        <p style="font-size: 14px; margin-top: 5px;">Fahre mit der Maus über den Sticker für den Peel-Effekt</p>
-    </div>
-
     <div class="app-container" id="appContainer">
-        <!-- Sticker werden hier dynamisch hinzugefügt -->
+        <!-- Sticker wird hier dynamisch hinzugefügt -->
     </div>
-
-    <svg width="0" height="0">
-        <defs>
-            <filter id="pointLight">
-                <feGaussianBlur stdDeviation="1" result="blur" />
-                <feSpecularLighting result="spec" in="blur" specularExponent="100" specularConstant="0.1" lightingColor="white">
-                    <fePointLight id="pointLightSource" x="100" y="100" z="300" />
-                </feSpecularLighting>
-                <feComposite in="spec" in2="SourceGraphic" result="lit" />
-                <feComposite in="lit" in2="SourceAlpha" operator="in" />
-            </filter>
-
-            <filter id="pointLightFlipped">
-                <feGaussianBlur stdDeviation="10" result="blur" />
-                <feSpecularLighting result="spec" in="blur" specularExponent="100" specularConstant="0.7" lightingColor="white">
-                    <fePointLight id="pointLightFlippedSource" x="100" y="100" z="300" />
-                </feSpecularLighting>
-                <feComposite in="spec" in2="SourceGraphic" result="lit" />
-                <feComposite in="lit" in2="SourceAlpha" operator="in" />
-            </filter>
-
-            <filter id="dropShadow">
-                <feDropShadow dx="2" dy="4" stdDeviation="1.8" floodColor="black" floodOpacity="0.6" />
-            </filter>
-        </defs>
-    </svg>
 
     <script>
         gsap.registerPlugin(Draggable);
 
-        // Dein eigener Sticker
-        const defaultImage = 'images/kl.jpg';
+        const stickerImage = 'images/kl.jpg';
 
-        function createSticker(imageSrc, x = 100, y = 100) {
+        function createSticker(imageSrc, x = 150, y = 150) {
             const container = document.getElementById('appContainer');
             
             const draggableDiv = document.createElement('div');
             draggableDiv.className = 'draggable';
-            draggableDiv.style.cssText = `
-                --sticker-rotate: ${Math.random() * 60 - 30}deg;
-                --sticker-width: 200px;
-                --sticker-peelback-hover: 30%;
-                --sticker-peelback-active: 40%;
-            `;
 
             draggableDiv.innerHTML = `
-                <div class="sticker-container">
-                    <div class="sticker-main">
-                        <div class="sticker-lighting">
+                <div class="sticker-wrapper">
+                    <div class="sticker-container">
+                        <div class="sticker-main">
                             <img src="${imageSrc}" alt="" class="sticker-image" draggable="false">
                         </div>
-                    </div>
-                    <div class="flap">
-                        <div class="flap-lighting">
-                            <img src="${imageSrc}" alt="" class="flap-image" draggable="false">
-                        </div>
+                        <div class="sticker-curl-shadow"></div>
+                        <div class="sticker-peel"></div>
                     </div>
                 </div>
             `;
 
             container.appendChild(draggableDiv);
-            gsap.set(draggableDiv, { x, y });
+            
+            const randomRotation = Math.random() * 40 - 20;
+            gsap.set(draggableDiv, { 
+                x, 
+                y,
+                rotation: randomRotation
+            });
 
-            // Draggable erstellen
             Draggable.create(draggableDiv, {
                 type: 'x,y',
                 bounds: container,
                 inertia: true,
                 onDrag: function() {
-                    const rot = gsap.utils.clamp(-24, 24, this.deltaX * 0.4);
-                    gsap.to(draggableDiv, { rotation: rot, duration: 0.15, ease: 'power1.out' });
+                    const rot = gsap.utils.clamp(-30, 30, this.deltaX * 0.25);
+                    gsap.to(draggableDiv, { 
+                        rotation: randomRotation + rot, 
+                        duration: 0.15, 
+                        ease: 'power1.out' 
+                    });
                 },
                 onDragEnd: function() {
-                    gsap.to(draggableDiv, { rotation: 0, duration: 0.8, ease: 'power2.out' });
+                    gsap.to(draggableDiv, { 
+                        rotation: randomRotation, 
+                        duration: 0.8, 
+                        ease: 'elastic.out(1, 0.5)' 
+                    });
                 }
             });
 
-            // Touch-Support
             const stickerContainer = draggableDiv.querySelector('.sticker-container');
-            stickerContainer.addEventListener('touchstart', () => {
-                stickerContainer.classList.add('touch-active');
+            
+            stickerContainer.addEventListener('touchstart', (e) => {
+                draggableDiv.classList.add('touch-active');
             });
-            stickerContainer.addEventListener('touchend', () => {
-                stickerContainer.classList.remove('touch-active');
+            
+            stickerContainer.addEventListener('touchend', (e) => {
+                draggableDiv.classList.remove('touch-active');
             });
 
             return draggableDiv;
         }
 
-        // Licht-Effekt
-        document.getElementById('appContainer').addEventListener('mousemove', (e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            gsap.set('#pointLightSource', { attr: { x, y } });
-            gsap.set('#pointLightFlippedSource', { attr: { x, y: rect.height - y } });
-        });
-
-        // Initial Sticker erstellen
-        createSticker(defaultImage, 50, 50);
-
-        // Upload-Funktionalität
-        document.getElementById('imageUpload').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const appContainer = document.getElementById('appContainer');
-                    const rect = appContainer.getBoundingClientRect();
-                    const x = Math.random() * (rect.width - 250);
-                    const y = Math.random() * (rect.height - 250);
-                    createSticker(event.target.result, x, y);
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+        createSticker(stickerImage, 200, 200);
     </script>
 </body>
 </html>
